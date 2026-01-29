@@ -17,43 +17,43 @@
 }
 
 @layer components {
-  .btn {
+  .button {
     @apply inline-flex items-center justify-center rounded-lg px-4 py-2 text-sm font-medium transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none;
   }
 
-  .btn-primary {
+  .button-primary {
     @apply bg-blue-600 text-white hover:bg-blue-700 focus:ring-blue-500 shadow-sm;
   }
 
-  .btn-secondary {
+  .button-secondary {
     @apply bg-gray-100 text-gray-900 hover:bg-gray-200 focus:ring-gray-500 border border-gray-300;
   }
 
-  .btn-success {
+  .button-success {
     @apply bg-green-600 text-white hover:bg-green-700 focus:ring-green-500 shadow-sm;
   }
 
-  .btn-danger {
+  .button-danger {
     @apply bg-red-600 text-white hover:bg-red-700 focus:ring-red-500 shadow-sm;
   }
 
-  .input {
+  .form-input {
     @apply w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200;
   }
 
-  .card {
+  .panel {
     @apply bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden;
   }
 
-  .card-header {
+  .panel-header {
     @apply px-6 py-4 border-b border-gray-200 bg-gray-50;
   }
 
-  .card-body {
+  .panel-body {
     @apply px-6 py-4;
   }
 
-  .card-footer {
+  .panel-footer {
     @apply px-6 py-4 border-t border-gray-200 bg-gray-50;
   }
 }

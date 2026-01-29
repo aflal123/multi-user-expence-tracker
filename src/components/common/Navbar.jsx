@@ -50,6 +50,15 @@ const Navbar = ({ isAuthenticated, setIsAuthenticated, setSidebarOpen, onLogout 
               <span className="absolute top-1 right-1 h-2 w-2 bg-red-500 rounded-full"></span>
             </button>
 
+            {/* Logout */}
+            <button
+              onClick={handleLogout}
+              className="button button-primary flex items-center space-x-2"
+            >
+              <LogOut className="h-4 w-4" />
+              <span>Logout</span>
+            </button>
+
             {/* Profile dropdown */}
             <div className="relative">
               <button
@@ -79,13 +88,6 @@ const Navbar = ({ isAuthenticated, setIsAuthenticated, setSidebarOpen, onLogout 
                     <span>Settings</span>
                   </button>
                   <hr className="my-1 border-gray-200" />
-                  <button
-                    onClick={handleLogout}
-                    className="flex items-center space-x-2 px-4 py-2 text-sm text-red-600 hover:bg-red-50 w-full text-left"
-                  >
-                    <LogOut className="h-4 w-4" />
-                    <span>Logout</span>
-                  </button>
                 </div>
               )}
             </div>

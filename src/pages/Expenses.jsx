@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Plus, Search, Filter, Download, Calendar, DollarSign, TrendingUp, TrendingDown, X, Camera, Upload } from 'lucide-react';
+import { Plus, Search, Filter, Download, X, Camera, Upload } from 'lucide-react';
 import { expensesAPI } from '../services/api';
 
 const Expenses = () => {
@@ -30,7 +30,6 @@ const Expenses = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    console.log('Form submitted with data:', formData);
     setIsLoading(true);
 
     try {
@@ -42,9 +41,7 @@ const Expenses = () => {
         formDataToSend.append('receipt', formData.receipt);
       }
 
-      console.log('Sending to API:', formDataToSend);
       const response = await expensesAPI.add(formDataToSend);
-      console.log('API Response:', response);
 
       if (response.status === 200) {
         setShowAddModal(false);
@@ -64,7 +61,6 @@ const Expenses = () => {
     setFormData({ ...formData, receipt: e.target.files[0] });
   };
 
-  const totalExpenses = expenses.reduce((sum, expense) => sum + parseFloat(expense.amount), 0);
   const filteredExpenses = expenses.filter(expense =>
     expense.reason.toLowerCase().includes(searchTerm.toLowerCase())
   );
@@ -78,11 +74,8 @@ const Expenses = () => {
           <p className="text-gray-600">Track and manage your daily expenses</p>
         </div>
         <button
-          onClick={() => {
-            console.log('Add Expense button clicked');
-            setShowAddModal(true);
-          }}
-          className="btn btn-primary flex items-center space-x-2"
+          onClick={() => setShowAddModal(true)}
+          className="button button-primary flex items-center space-x-2"
         >
           <Plus className="h-4 w-4" />
           <span>Add Expense</span>
@@ -91,8 +84,8 @@ const Expenses = () => {
 
       {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <div className="card">
-          <div className="card-body">
+        <div className="panel">
+          <div className="panel-body">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-gray-600">Today's Total</p>
@@ -105,8 +98,8 @@ const Expenses = () => {
           </div>
         </div>
 
-        <div className="card">
-          <div className="card-body">
+        <div className="panel">
+          <div className="panel-body">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-gray-600">Transactions</p>
@@ -119,8 +112,8 @@ const Expenses = () => {
           </div>
         </div>
 
-        <div className="card">
-          <div className="card-body">
+        <div className="panel">
+          <div className="panel-body">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-gray-600">Average</p>
@@ -136,35 +129,31 @@ const Expenses = () => {
         </div>
       </div>
 
-      {/* Filters and Search */}
-      <div className="card">
-        <div className="card-body">
-          <div className="flex flex-col sm:flex-row gap-4">
-            <div className="flex-1">
+      {/* Filters */}
+      <div className="panel">
+        <div className="panel-body">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-3 sm:space-y-0">
+            <div className="flex items-center space-x-3">
               <div className="relative">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <Search className="h-5 w-5 text-gray-400" />
-                </div>
+                <Search className="h-4 w-4 absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
                 <input
                   type="text"
                   placeholder="Search expenses..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="input pl-10"
+                  className="form-input pl-10 w-64"
                 />
               </div>
-            </div>
-            <div className="flex items-center space-x-2">
               <input
                 type="date"
                 value={selectedDate}
                 onChange={(e) => setSelectedDate(e.target.value)}
-                className="input"
+                className="form-input"
               />
-              <button className="btn btn-secondary">
+              <button className="button button-secondary">
                 <Filter className="h-4 w-4" />
               </button>
-              <button className="btn btn-secondary">
+              <button className="button button-secondary">
                 <Download className="h-4 w-4" />
               </button>
             </div>
@@ -173,11 +162,11 @@ const Expenses = () => {
       </div>
 
       {/* Expenses List */}
-      <div className="card">
-        <div className="card-header">
+      <div className="panel">
+        <div className="panel-header">
           <h2 className="text-lg font-semibold text-gray-900">Expense List</h2>
         </div>
-        <div className="card-body">
+        <div className="panel-body">
           {filteredExpenses.length === 0 ? (
             <div className="text-center py-12">
               <div className="mx-auto h-12 w-12 rounded-lg bg-gray-100 flex items-center justify-center mb-4">
@@ -235,10 +224,7 @@ const Expenses = () => {
             <div className="flex items-center justify-between p-6 border-b border-gray-200">
               <h2 className="text-xl font-semibold text-gray-900">Add New Expense</h2>
               <button
-                onClick={() => {
-                  console.log('Close modal clicked');
-                  setShowAddModal(false);
-                }}
+                onClick={() => setShowAddModal(false)}
                 className="p-2 rounded-lg text-gray-500 hover:text-gray-700 hover:bg-gray-100"
               >
                 <X className="h-5 w-5" />
@@ -253,7 +239,7 @@ const Expenses = () => {
                   required
                   value={formData.reason}
                   onChange={(e) => setFormData({ ...formData, reason: e.target.value })}
-                  className="input"
+                  className="form-input"
                   placeholder="e.g., Lunch at restaurant"
                 />
               </div>
@@ -267,7 +253,7 @@ const Expenses = () => {
                   required
                   value={formData.amount}
                   onChange={(e) => setFormData({ ...formData, amount: e.target.value })}
-                  className="input"
+                  className="form-input"
                   placeholder="0.00"
                 />
               </div>
@@ -279,7 +265,7 @@ const Expenses = () => {
                   required
                   value={formData.date}
                   onChange={(e) => setFormData({ ...formData, date: e.target.value })}
-                  className="input"
+                  className="form-input"
                   max={new Date().toISOString().split('T')[0]}
                 />
               </div>
@@ -315,14 +301,14 @@ const Expenses = () => {
                 <button
                   type="button"
                   onClick={() => setShowAddModal(false)}
-                  className="flex-1 btn btn-secondary"
+                  className="flex-1 button button-secondary"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={isLoading}
-                  className="flex-1 btn btn-primary"
+                  className="flex-1 button button-primary"
                 >
                   {isLoading ? 'Adding...' : 'Add Expense'}
                 </button>

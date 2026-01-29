@@ -18,49 +18,21 @@ const Login = ({ setIsAuthenticated }) => {
     });
   };
 
-  const checkCurrentAuth = () => {
-    const token = localStorage.getItem('token');
-    const user = localStorage.getItem('user');
-    console.log('=== Current Auth State ===');
-    console.log('Token exists:', !!token);
-    console.log('Token value:', token);
-    console.log('User exists:', !!user);
-    console.log('User value:', user);
-    alert(`Token: ${!!token ? 'EXISTS' : 'MISSING'}\nUser: ${!!user ? 'EXISTS' : 'MISSING'}`);
-  };
-
   const handleSubmit = async (e) => {
     e.preventDefault();
     setIsLoading(true);
     setError('');
 
     try {
-      console.log('Submitting login with:', formData);
       const response = await authAPI.login(formData);
       const data = response.data;
 
-      console.log('Login response:', data);
-      console.log('Response status:', response.status);
-
       if (response.status === 200) {
-        console.log('Saving token:', data.token);
-        console.log('Saving user:', data.user);
-
         localStorage.setItem('token', data.token);
         localStorage.setItem('user', JSON.stringify(data.user));
-
-        console.log('Token saved to localStorage');
-        console.log('User saved to localStorage');
-
-        // Verify it was saved
-        const savedToken = localStorage.getItem('token');
-        console.log('Verified token exists:', !!savedToken);
-
         setIsAuthenticated(true);
-        console.log('Set isAuthenticated to true');
       }
     } catch (err) {
-      console.error('Login error:', err);
       setError(err.response?.data?.message || 'Login failed');
     } finally {
       setIsLoading(false);
@@ -104,7 +76,7 @@ const Login = ({ setIsAuthenticated }) => {
                   required
                   value={formData.email}
                   onChange={handleChange}
-                  className="input pl-10"
+                  className="form-input pl-10"
                   placeholder="Enter your email"
                 />
               </div>
@@ -126,7 +98,7 @@ const Login = ({ setIsAuthenticated }) => {
                   required
                   value={formData.password}
                   onChange={handleChange}
-                  className="input pl-10 pr-10"
+                  className="form-input pl-10 pr-10"
                   placeholder="Enter your password"
                 />
                 <button
@@ -158,13 +130,6 @@ const Login = ({ setIsAuthenticated }) => {
               </div>
               <button
                 type="button"
-                onClick={checkCurrentAuth}
-                className="text-xs text-blue-600 hover:text-blue-500 font-medium"
-              >
-                Check Auth
-              </button>
-              <button
-                type="button"
                 className="text-sm text-blue-600 hover:text-blue-500 font-medium"
               >
                 Forgot password?
@@ -175,10 +140,13 @@ const Login = ({ setIsAuthenticated }) => {
             <button
               type="submit"
               disabled={isLoading}
-              className="w-full btn btn-primary py-3 text-base font-medium flex items-center justify-center space-x-2"
+              className="w-full button button-primary flex items-center justify-center space-x-2"
             >
               {isLoading ? (
-                <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
+                <>
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                  <span>Signing in...</span>
+                </>
               ) : (
                 <>
                   <span>Sign in</span>
