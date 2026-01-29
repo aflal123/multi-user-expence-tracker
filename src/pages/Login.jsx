@@ -166,22 +166,6 @@ const Login = ({ setIsAuthenticated }) => {
             </p>
           </div>
         </div>
-
-        {/* Features */}
-        <div className="grid grid-cols-3 gap-4 text-center">
-          <div className="bg-white/50 backdrop-blur rounded-lg p-4">
-            <div className="text-2xl font-bold text-blue-600">256-bit</div>
-            <div className="text-xs text-gray-600">Encryption</div>
-          </div>
-          <div className="bg-white/50 backdrop-blur rounded-lg p-4">
-            <div className="text-2xl font-bold text-green-600">2FA</div>
-            <div className="text-xs text-gray-600">Protection</div>
-          </div>
-          <div className="bg-white/50 backdrop-blur rounded-lg p-4">
-            <div className="text-2xl font-bold text-purple-600">GDPR</div>
-            <div className="text-xs text-gray-600">Compliant</div>
-          </div>
-        </div>
       </div>
     </div>
   );

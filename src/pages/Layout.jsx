@@ -14,23 +14,6 @@ const Layout = () => {
   });
   const [sidebarOpen, setSidebarOpen] = React.useState(false);
 
-  React.useEffect(() => {
-    const checkAuth = () => {
-      const token = localStorage.getItem('token');
-      const isAuth = !!token;
-      setIsAuthenticated(isAuth);
-    };
-
-    checkAuth();
-
-    // Listen for storage changes
-    window.addEventListener('storage', checkAuth);
-
-    return () => {
-      window.removeEventListener('storage', checkAuth);
-    };
-  }, []);
-
   const handleLogout = () => {
     localStorage.removeItem('token');
     localStorage.removeItem('user');

@@ -1,49 +1,48 @@
 import React, { useState, useEffect } from 'react';
-import { DollarSign, ArrowUpRight, ArrowDownRight, Plus } from 'lucide-react';
+import { DollarSign, ArrowUpRight, Plus, Camera } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import { expensesAPI } from '../services/api';
 
 const Dashboard = () => {
   const navigate = useNavigate();
   const [recentTransactions, setRecentTransactions] = useState([]);
-  const [loading, setLoading] = useState(true);
 
+  // Load transactions from localStorage
   useEffect(() => {
-    fetchDashboardData();
-
-    // Set up real-time updates every 30 seconds
-    const interval = setInterval(fetchDashboardData, 30000);
-
-    return () => clearInterval(interval);
+    const savedTransactions = localStorage.getItem('userTransactions');
+    if (savedTransactions) {
+      const transactions = JSON.parse(savedTransactions);
+      // Add receipt data to transactions
+      const transactionsWithReceipts = transactions.map(transaction => ({
+        ...transaction,
+        receiptData: localStorage.getItem(`receipt_${transaction.id}`)
+      }));
+      setRecentTransactions(transactionsWithReceipts);
+    }
   }, []);
 
-  const fetchDashboardData = async () => {
-    try {
-      setLoading(true);
+  // Listen for new transactions
+  useEffect(() => {
+    const handleStorageChange = () => {
+      const savedTransactions = localStorage.getItem('userTransactions');
+      if (savedTransactions) {
+        const transactions = JSON.parse(savedTransactions);
+        // Add receipt data to transactions
+        const transactionsWithReceipts = transactions.map(transaction => ({
+          ...transaction,
+          receiptData: localStorage.getItem(`receipt_${transaction.id}`)
+        }));
+        setRecentTransactions(transactionsWithReceipts);
+      }
+    };
 
-      // Fetch today's expenses
-      const today = new Date().toISOString().split('T')[0];
-      const expensesResponse = await expensesAPI.getAll(today);
-      const expenses = expensesResponse.data || [];
+    window.addEventListener('storage', handleStorageChange);
+    window.addEventListener('transactionAdded', handleStorageChange);
 
-      // Format recent transactions
-      const formattedTransactions = expenses.slice(0, 6).map(expense => ({
-        id: expense.id,
-        name: expense.reason,
-        amount: parseFloat(expense.amount),
-        date: expense.expense_date,
-        category: 'Expense',
-        trend: 'up',
-        receiptImage: expense.receipt_image
-      }));
-
-      setRecentTransactions(formattedTransactions);
-    } catch (error) {
-      console.error('Error fetching dashboard data:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
+    return () => {
+      window.removeEventListener('storage', handleStorageChange);
+      window.removeEventListener('transactionAdded', handleStorageChange);
+    };
+  }, []);
 
   return (
     <div className="space-y-6">
@@ -51,10 +50,7 @@ const Dashboard = () => {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Dashboard</h1>
-          <p className="text-gray-600">
-            Welcome back! Here's your financial overview.
-            {loading && <span className="ml-2 text-xs text-blue-600">Updating...</span>}
-          </p>
+          <p className="text-gray-600">Welcome back! Here's your financial overview.</p>
         </div>
         <button
           onClick={() => navigate('/expenses')}
@@ -63,65 +59,6 @@ const Dashboard = () => {
           <Plus className="h-4 w-4" />
           <span>Add Expense</span>
         </button>
-      </div>
-
-      {/* Stats Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <div className="panel">
-          <div className="panel-body">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-gray-600">Today's Total</p>
-                <p className="text-2xl font-bold text-gray-900">${stats.totalExpenses.toFixed(2)}</p>
-              </div>
-              <div className="h-12 w-12 rounded-lg bg-blue-100 flex items-center justify-center">
-                <DollarSign className="h-6 w-6 text-blue-600" />
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div className="panel">
-          <div className="panel-body">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-gray-600">This Month</p>
-                <p className="text-2xl font-bold text-gray-900">${stats.thisMonth.toFixed(2)}</p>
-              </div>
-              <div className="h-12 w-12 rounded-lg bg-green-100 flex items-center justify-center">
-                <Calendar className="h-6 w-6 text-green-600" />
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div className="panel">
-          <div className="panel-body">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-gray-600">Budget Used</p>
-                <p className="text-2xl font-bold text-gray-900">{stats.budgetUsed.toFixed(1)}%</p>
-              </div>
-              <div className="h-12 w-12 rounded-lg bg-yellow-100 flex items-center justify-center">
-                <CreditCard className="h-6 w-6 text-yellow-600" />
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div className="panel">
-          <div className="panel-body">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-gray-600">Savings</p>
-                <p className="text-2xl font-bold text-gray-900">${stats.savings.toFixed(2)}</p>
-              </div>
-              <div className="h-12 w-12 rounded-lg bg-purple-100 flex items-center justify-center">
-                <TrendingUp className="h-6 w-6 text-purple-600" />
-              </div>
-            </div>
-          </div>
-        </div>
       </div>
 
       {/* Recent Transactions */}
@@ -146,41 +83,55 @@ const Dashboard = () => {
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {recentTransactions.map((transaction) => (
+              {recentTransactions.slice(-6).reverse().map((transaction) => (
                 <div key={transaction.id} className="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
                   <div className="flex items-start justify-between mb-3">
                     <div className="flex items-center space-x-3">
-                      <div className={`h-10 w-10 rounded-full flex items-center justify-center ${transaction.trend === 'up' ? 'bg-red-100' : 'bg-green-100'
-                        }`}>
-                        {transaction.trend === 'up' ? (
-                          <ArrowUpRight className="h-5 w-5 text-red-600" />
-                        ) : (
-                          <ArrowDownRight className="h-5 w-5 text-green-600" />
-                        )}
+                      <div className="h-10 w-10 rounded-full bg-red-100 flex items-center justify-center">
+                        <ArrowUpRight className="h-5 w-5 text-red-600" />
                       </div>
                       <div>
-                        <p className="font-medium text-gray-900">{transaction.name}</p>
+                        <p className="font-medium text-gray-900">{transaction.reason}</p>
                         <p className="text-xs text-gray-500">
                           {new Date(transaction.date).toLocaleDateString()}
                         </p>
                       </div>
                     </div>
                     <div className="text-right">
-                      <p className={`font-bold text-lg ${transaction.trend === 'up' ? 'text-red-600' : 'text-green-600'
-                        }`}>
-                        {transaction.trend === 'up' ? '-' : '+'}${transaction.amount.toFixed(2)}
+                      <p className="font-bold text-lg text-red-600">
+                        -Rs.{parseFloat(transaction.amount).toFixed(2)}
                       </p>
                     </div>
                   </div>
 
                   <div className="flex items-center justify-between">
                     <span className="text-xs px-2 py-1 rounded-full font-medium bg-gray-100 text-gray-800">
-                      {transaction.category}
+                      Expense
                     </span>
-                    {transaction.receiptImage && (
-                      <span className="text-xs px-2 py-1 bg-blue-100 text-blue-800 rounded-full">
-                        📎 Receipt
-                      </span>
+                    {transaction.receiptData && (
+                      <div className="flex items-center space-x-2">
+                        <span className="text-xs px-2 py-1 bg-blue-100 text-blue-800 rounded-full">
+                          📎 Receipt
+                        </span>
+                        <div className="h-12 w-12 rounded border border-gray-200 overflow-hidden cursor-pointer hover:scale-105 transition-transform">
+                          {transaction.receiptData ? (
+                            <img
+                              src={transaction.receiptData}
+                              alt="Receipt"
+                              className="h-full w-full object-cover"
+                              onClick={() => {
+                                // Open receipt in new tab
+                                const newWindow = window.open();
+                                newWindow.document.write(`<img src="${transaction.receiptData}" style="max-width:100%; height:auto;" />`);
+                              }}
+                            />
+                          ) : (
+                            <div className="h-full w-full bg-gray-100 flex items-center justify-center">
+                              <Camera className="h-4 w-4 text-gray-400" />
+                            </div>
+                          )}
+                        </div>
+                      </div>
                     )}
                   </div>
                 </div>

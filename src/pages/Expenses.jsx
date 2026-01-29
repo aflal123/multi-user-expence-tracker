@@ -1,13 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { Plus, Search, Filter, Download, X, Camera, Upload } from 'lucide-react';
-import { expensesAPI } from '../services/api';
+import { Plus, X, Camera, Upload } from 'lucide-react';
 
 const Expenses = () => {
-  const [expenses, setExpenses] = useState([]);
   const [showAddModal, setShowAddModal] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
   const [isLoading, setIsLoading] = useState(false);
+  const [expenses, setExpenses] = useState([]);
   const [formData, setFormData] = useState({
     reason: '',
     amount: '',
@@ -15,54 +14,109 @@ const Expenses = () => {
     receipt: null
   });
 
+  // Load expenses from localStorage
   useEffect(() => {
-    fetchExpenses();
-  }, [selectedDate]);
-
-  const fetchExpenses = async () => {
-    try {
-      const response = await expensesAPI.getAll(selectedDate);
-      setExpenses(response.data);
-    } catch (error) {
-      console.error('Error fetching expenses:', error);
+    const savedExpenses = localStorage.getItem('userTransactions');
+    if (savedExpenses) {
+      const expenses = JSON.parse(savedExpenses);
+      // Add receipt data to expenses
+      const expensesWithReceipts = expenses.map(expense => ({
+        ...expense,
+        receiptData: localStorage.getItem(`receipt_${expense.id}`)
+      }));
+      setExpenses(expensesWithReceipts);
     }
-  };
+  }, []);
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setIsLoading(true);
-
-    try {
-      const formDataToSend = new FormData();
-      formDataToSend.append('reason', formData.reason);
-      formDataToSend.append('amount', formData.amount);
-      formDataToSend.append('date', formData.date);
-      if (formData.receipt) {
-        formDataToSend.append('receipt', formData.receipt);
+  // Listen for new expenses
+  useEffect(() => {
+    const handleStorageChange = () => {
+      const savedExpenses = localStorage.getItem('userTransactions');
+      if (savedExpenses) {
+        const expenses = JSON.parse(savedExpenses);
+        // Add receipt data to expenses
+        const expensesWithReceipts = expenses.map(expense => ({
+          ...expense,
+          receiptData: localStorage.getItem(`receipt_${expense.id}`)
+        }));
+        setExpenses(expensesWithReceipts);
       }
+    };
 
-      const response = await expensesAPI.add(formDataToSend);
+    window.addEventListener('storage', handleStorageChange);
+    window.addEventListener('transactionAdded', handleStorageChange);
 
-      if (response.status === 200) {
-        setShowAddModal(false);
-        setFormData({ reason: '', amount: '', date: new Date().toISOString().split('T')[0], receipt: null });
-        fetchExpenses();
-        alert('Expense added successfully!');
-      }
-    } catch (error) {
-      console.error('Error adding expense:', error);
-      alert('Error adding expense: ' + (error.response?.data?.message || error.message));
-    } finally {
-      setIsLoading(false);
-    }
+    return () => {
+      window.removeEventListener('storage', handleStorageChange);
+      window.removeEventListener('transactionAdded', handleStorageChange);
+    };
+  }, []);
+
+  const handleChange = (e) => {
+    setFormData({
+      ...formData,
+      [e.target.name]: e.target.value
+    });
   };
 
   const handleFileChange = (e) => {
     setFormData({ ...formData, receipt: e.target.files[0] });
   };
 
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setIsLoading(true);
+
+    // Create new transaction
+    const newTransaction = {
+      id: Date.now(),
+      reason: formData.reason,
+      amount: formData.amount,
+      date: formData.date,
+      receipt: formData.receipt ? formData.receipt.name : null,
+      receiptFile: formData.receipt || null
+    };
+
+    // Get existing transactions from localStorage
+    const existingTransactions = localStorage.getItem('userTransactions');
+    let transactions = existingTransactions ? JSON.parse(existingTransactions) : [];
+
+    // Add new transaction
+    transactions.push(newTransaction);
+
+    // Save to localStorage (without the file object, just the name)
+    const transactionsToSave = transactions.map(t => ({
+      id: t.id,
+      reason: t.reason,
+      amount: t.amount,
+      date: t.date,
+      receipt: t.receipt
+    }));
+    localStorage.setItem('userTransactions', JSON.stringify(transactionsToSave));
+
+    // Store the file object separately for Dashboard display
+    if (formData.receipt) {
+      const reader = new FileReader();
+      reader.onload = function (e) {
+        localStorage.setItem(`receipt_${newTransaction.id}`, e.target.result);
+      };
+      reader.readAsDataURL(formData.receipt);
+    }
+
+    // Trigger custom event to notify Dashboard
+    window.dispatchEvent(new Event('transactionAdded'));
+
+    // Simulate API call
+    setTimeout(() => {
+      setShowAddModal(false);
+      setFormData({ reason: '', amount: '', date: new Date().toISOString().split('T')[0], receipt: null });
+      setIsLoading(false);
+      alert('Expense added successfully!');
+    }, 500);
+  };
+
   const filteredExpenses = expenses.filter(expense =>
-    expense.reason.toLowerCase().includes(searchTerm.toLowerCase())
+    expense.date === selectedDate
   );
 
   return (
@@ -82,68 +136,11 @@ const Expenses = () => {
         </button>
       </div>
 
-      {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <div className="panel">
-          <div className="panel-body">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-gray-600">Today's Total</p>
-                <p className="text-2xl font-bold text-gray-900">${totalExpenses.toFixed(2)}</p>
-              </div>
-              <div className="h-12 w-12 rounded-lg bg-blue-100 flex items-center justify-center">
-                <DollarSign className="h-6 w-6 text-blue-600" />
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div className="panel">
-          <div className="panel-body">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-gray-600">Transactions</p>
-                <p className="text-2xl font-bold text-gray-900">{expenses.length}</p>
-              </div>
-              <div className="h-12 w-12 rounded-lg bg-green-100 flex items-center justify-center">
-                <TrendingUp className="h-6 w-6 text-green-600" />
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div className="panel">
-          <div className="panel-body">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-gray-600">Average</p>
-                <p className="text-2xl font-bold text-gray-900">
-                  ${expenses.length > 0 ? (totalExpenses / expenses.length).toFixed(2) : '0.00'}
-                </p>
-              </div>
-              <div className="h-12 w-12 rounded-lg bg-purple-100 flex items-center justify-center">
-                <TrendingDown className="h-6 w-6 text-purple-600" />
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
       {/* Filters */}
       <div className="panel">
         <div className="panel-body">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-3 sm:space-y-0">
             <div className="flex items-center space-x-3">
-              <div className="relative">
-                <Search className="h-4 w-4 absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
-                <input
-                  type="text"
-                  placeholder="Search expenses..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="form-input pl-10 w-64"
-                />
-              </div>
               <input
                 type="date"
                 value={selectedDate}
@@ -170,7 +167,7 @@ const Expenses = () => {
           {filteredExpenses.length === 0 ? (
             <div className="text-center py-12">
               <div className="mx-auto h-12 w-12 rounded-lg bg-gray-100 flex items-center justify-center mb-4">
-                <DollarSign className="h-6 w-6 text-gray-400" />
+                <Plus className="h-6 w-6 text-gray-400" />
               </div>
               <h3 className="text-lg font-medium text-gray-900 mb-2">No expenses found</h3>
               <p className="text-gray-600">Get started by adding your first expense.</p>
@@ -181,34 +178,36 @@ const Expenses = () => {
                 <div key={expense.id} className="flex items-center justify-between p-4 border border-gray-200 rounded-lg hover:bg-gray-50">
                   <div className="flex items-center space-x-4">
                     <div className="h-10 w-10 rounded-lg bg-red-100 flex items-center justify-center">
-                      <TrendingUp className="h-5 w-5 text-red-600" />
+                      <Plus className="h-5 w-5 text-red-600" />
                     </div>
                     <div className="flex-1">
                       <p className="font-medium text-gray-900">{expense.reason}</p>
                       <div className="flex items-center space-x-2 mt-1">
-                        <span className="text-xs text-gray-500">{expense.expense_date}</span>
-                        {expense.receipt_image && (
+                        <span className="text-xs text-gray-500">{expense.date}</span>
+                        {expense.receipt && (
                           <span className="text-xs px-2 py-1 bg-blue-100 text-blue-800 rounded-full">
                             📎 Receipt
                           </span>
                         )}
                       </div>
                     </div>
-                    {expense.receipt_image && (
+                    {expense.receiptData && (
                       <div className="ml-4">
                         <img
-                          src={`http://localhost:3000/uploads/${expense.receipt_image}`}
+                          src={expense.receiptData}
                           alt="Receipt"
                           className="h-12 w-12 object-cover rounded border border-gray-200 cursor-pointer hover:scale-105 transition-transform"
                           onClick={() => {
-                            window.open(`http://localhost:3000/uploads/${expense.receipt_image}`, '_blank');
+                            // Open receipt in new tab
+                            const newWindow = window.open();
+                            newWindow.document.write(`<img src="${expense.receiptData}" style="max-width:100%; height:auto;" />`);
                           }}
                         />
                       </div>
                     )}
                   </div>
                   <div className="text-right ml-4">
-                    <p className="font-semibold text-red-600">${parseFloat(expense.amount).toFixed(2)}</p>
+                    <p className="font-semibold text-red-600">Rs.{parseFloat(expense.amount).toFixed(2)}</p>
                   </div>
                 </div>
               ))}
@@ -221,7 +220,7 @@ const Expenses = () => {
       {showAddModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white rounded-2xl shadow-xl w-full max-w-md mx-4">
-            <div className="flex items-center justify-between p-6 border-b border-gray-200">
+            <div className="flex items-center justify-between p-6 border-b">
               <h2 className="text-xl font-semibold text-gray-900">Add New Expense</h2>
               <button
                 onClick={() => setShowAddModal(false)}
@@ -237,8 +236,9 @@ const Expenses = () => {
                 <input
                   type="text"
                   required
+                  name="reason"
                   value={formData.reason}
-                  onChange={(e) => setFormData({ ...formData, reason: e.target.value })}
+                  onChange={handleChange}
                   className="form-input"
                   placeholder="e.g., Lunch at restaurant"
                 />
@@ -251,8 +251,9 @@ const Expenses = () => {
                   step="0.01"
                   min="0"
                   required
+                  name="amount"
                   value={formData.amount}
-                  onChange={(e) => setFormData({ ...formData, amount: e.target.value })}
+                  onChange={handleChange}
                   className="form-input"
                   placeholder="0.00"
                 />
@@ -263,8 +264,9 @@ const Expenses = () => {
                 <input
                   type="date"
                   required
+                  name="date"
                   value={formData.date}
-                  onChange={(e) => setFormData({ ...formData, date: e.target.value })}
+                  onChange={handleChange}
                   className="form-input"
                   max={new Date().toISOString().split('T')[0]}
                 />
@@ -282,15 +284,17 @@ const Expenses = () => {
                   />
                   <label htmlFor="receipt-upload" className="cursor-pointer">
                     {formData.receipt ? (
-                      <div className="flex items-center justify-center space-x-2">
-                        <Camera className="h-5 w-5 text-green-600" />
-                        <span className="text-sm text-green-600">{formData.receipt.name}</span>
+                      <div className="space-y-2">
+                        <div className="mx-auto h-12 w-12 rounded-lg bg-blue-100 flex items-center justify-center">
+                          <Camera className="h-6 w-6 text-blue-600" />
+                        </div>
+                        <p className="text-sm text-gray-600">{formData.receipt.name}</p>
                       </div>
                     ) : (
-                      <div className="flex flex-col items-center space-y-2">
-                        <Upload className="h-8 w-8 text-gray-400" />
-                        <span className="text-sm text-gray-600">Click to upload receipt</span>
-                        <span className="text-xs text-gray-500">PNG, JPG up to 10MB</span>
+                      <div className="space-y-2">
+                        <Upload className="mx-auto h-12 w-12 text-gray-400" />
+                        <p className="text-sm text-gray-600">Click to upload receipt image</p>
+                        <p className="text-xs text-gray-500">PNG, JPG up to 10MB</p>
                       </div>
                     )}
                   </label>
