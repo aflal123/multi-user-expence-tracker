@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { DollarSign, ArrowUpRight, Plus, Camera, Calendar } from 'lucide-react';
+import { DollarSign, ArrowUpRight, Plus, Camera } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
 const Dashboard = () => {
@@ -39,7 +39,7 @@ const Dashboard = () => {
 
     window.addEventListener('storage', handleStorageChange);
     window.addEventListener('transactionAdded', handleStorageChange);
-
+    
     return () => {
       window.removeEventListener('storage', handleStorageChange);
       window.removeEventListener('transactionAdded', handleStorageChange);
@@ -65,7 +65,7 @@ const Dashboard = () => {
           <h1 className="text-2xl font-bold text-gray-900">Dashboard</h1>
           <p className="text-gray-600">Welcome back! Here's your financial overview.</p>
         </div>
-        <button
+        <button 
           onClick={() => navigate('/expenses')}
           className="button button-primary flex items-center space-x-2"
         >
@@ -127,7 +127,7 @@ const Dashboard = () => {
               <p className="text-gray-600 mb-4">
                 {selectedDate ? 'Try selecting a different date' : 'Start tracking your expenses to see them here'}
               </p>
-              <button
+              <button 
                 onClick={() => navigate('/expenses')}
                 className="button button-primary"
               >
@@ -142,59 +142,53 @@ const Dashboard = () => {
                     <div className="flex items-center space-x-3">
                       <div className="h-10 w-10 rounded-full bg-red-100 flex items-center justify-center">
                         <ArrowUpRight className="h-5 w-5 text-red-600" />
-                        <div>
-                          <p className="font-medium text-gray-900">{transaction.reason}</p>
-                          <p className="text-xs text-gray-500">
-                            {new Date(transaction.date).toLocaleDateString()}
-                          </p>
-                        </div>
                       </div>
-                      <div className="text-right">
-                        <p className="font-bold text-lg text-red-600">
-                          -Rs.{parseFloat(transaction.amount).toFixed(2)}
+                      <div>
+                        <p className="font-medium text-gray-900">{transaction.reason}</p>
+                        <p className="text-xs text-gray-500">
+                          {new Date(transaction.date).toLocaleDateString()}
                         </p>
                       </div>
                     </div>
-
-                    <div className="flex items-center justify-between">
-                      <span className="text-xs px-2 py-1 rounded-full font-medium bg-gray-100 text-gray-800">
-                        Expense
-                      </span>
-                      {transaction.receiptData && (
-                        <div className="flex items-center space-x-2">
-                          <span className="text-xs px-2 py-1 bg-blue-100 text-blue-800 rounded-full">
-                            📎 Receipt
-                          </span>
-                          <div className="h-12 w-12 rounded border border-gray-200 overflow-hidden cursor-pointer hover:scale-105 transition-transform">
-                            {transaction.receiptData ? (
-                              <img
-                                src={transaction.receiptData}
-                                alt="Receipt"
-                                className="h-full w-full object-cover"
-                                onClick={() => {
-                                  // Open receipt in new tab
-                                  const newWindow = window.open();
-                                  newWindow.document.write(`<img src="${transaction.receiptData}" style="max-width:100%; height:auto;" />`);
-                                }}
-                              />
-                            ) : (
-                              <div className="h-full w-full bg-gray-100 flex items-center justify-center">
-                                <Camera className="h-4 w-4 text-gray-400" />
-                              </div>
-                            )}
-                          </div>
-                        </div>
-                      )}
+                    <div className="text-right">
+                      <p className="font-bold text-lg text-red-600">
+                        -Rs.{parseFloat(transaction.amount).toFixed(2)}
+                      </p>
                     </div>
                   </div>
-                  ))}
+                  
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs px-2 py-1 rounded-full font-medium bg-gray-100 text-gray-800">
+                      Expense
+                    </span>
+                    {transaction.receiptData && (
+                      <div className="flex items-center space-x-2">
+                        <span className="text-xs px-2 py-1 bg-blue-100 text-blue-800 rounded-full">
+                          📎 Receipt
+                        </span>
+                        <div className="h-12 w-12 rounded border border-gray-200 overflow-hidden cursor-pointer hover:scale-105 transition-transform">
+                          <img 
+                            src={transaction.receiptData} 
+                            alt="Receipt" 
+                            className="h-full w-full object-cover"
+                            onClick={() => {
+                              // Open receipt in new tab
+                              const newWindow = window.open();
+                              newWindow.document.write(`<img src="${transaction.receiptData}" style="max-width:100%; height:auto;" />`);
+                            }}
+                          />
+                        </div>
+                      </div>
+                    )}
+                  </div>
                 </div>
-              )
-            }
+              ))}
             </div>
+          )}
+        </div>
       </div>
-      </div>
-      );
+    </div>
+  );
 };
 
-      export default Dashboard;
+export default Dashboard;

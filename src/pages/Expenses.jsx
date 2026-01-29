@@ -115,9 +115,7 @@ const Expenses = () => {
     }, 500);
   };
 
-  const filteredExpenses = expenses.filter(expense =>
-    expense.date === selectedDate
-  );
+  const filteredExpenses = expenses.slice().reverse(); // Show newest first
 
   return (
     <div className="space-y-6">
@@ -134,24 +132,6 @@ const Expenses = () => {
           <Plus className="h-4 w-4" />
           <span>Add Expense</span>
         </button>
-      </div>
-
-      {/* Date Filter */}
-      <div className="panel">
-        <div className="panel-body">
-          <div className="flex items-center space-x-3">
-            <label className="text-sm font-medium text-gray-700">Select Date:</label>
-            <input
-              type="date"
-              value={selectedDate}
-              onChange={(e) => setSelectedDate(e.target.value)}
-              className="form-input"
-            />
-            <span className="text-sm text-gray-500">
-              {filteredExpenses.length} transaction{filteredExpenses.length !== 1 ? 's' : ''} found
-            </span>
-          </div>
-        </div>
       </div>
 
       {/* Expenses List */}
