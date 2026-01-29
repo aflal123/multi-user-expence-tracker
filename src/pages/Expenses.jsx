@@ -136,24 +136,20 @@ const Expenses = () => {
         </button>
       </div>
 
-      {/* Filters */}
+      {/* Date Filter */}
       <div className="panel">
         <div className="panel-body">
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-3 sm:space-y-0">
-            <div className="flex items-center space-x-3">
-              <input
-                type="date"
-                value={selectedDate}
-                onChange={(e) => setSelectedDate(e.target.value)}
-                className="form-input"
-              />
-              <button className="button button-secondary">
-                <Filter className="h-4 w-4" />
-              </button>
-              <button className="button button-secondary">
-                <Download className="h-4 w-4" />
-              </button>
-            </div>
+          <div className="flex items-center space-x-3">
+            <label className="text-sm font-medium text-gray-700">Select Date:</label>
+            <input
+              type="date"
+              value={selectedDate}
+              onChange={(e) => setSelectedDate(e.target.value)}
+              className="form-input"
+            />
+            <span className="text-sm text-gray-500">
+              {filteredExpenses.length} transaction{filteredExpenses.length !== 1 ? 's' : ''} found
+            </span>
           </div>
         </div>
       </div>
