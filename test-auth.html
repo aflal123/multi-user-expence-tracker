@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Auth Test</title>
+</head>
+<body>
+    <h1>Authentication Test</h1>
+    <button onclick="testLogin()">Test Login</button>
+    <button onclick="checkAuth()">Check Auth</button>
+    <button onclick="clearAuth()">Clear Auth</button>
+    <div id="output"></div>
+
+    <script>
+        function testLogin() {
+            // Simulate login response
+            const mockResponse = {
+                token: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MSwiaWF0IjoxNzY5NzIwMDM0LCJleHAiOjE3Njk4MDY0MzR9.TDtsAcarobNhHbXZdslJwnEFoa0j6KUg2B0lju1QtCQ",
+                user: { id: 1, name: "Test User", email: "test@example.com" }
+            };
+            
+            localStorage.setItem('token', mockResponse.token);
+            localStorage.setItem('user', JSON.stringify(mockResponse.user));
+            
+            document.getElementById('output').innerHTML = 'Login successful! Token and user saved.';
+        }
+
+        function checkAuth() {
+            const token = localStorage.getItem('token');
+            const user = localStorage.getItem('user');
+            
+            document.getElementById('output').innerHTML = `
+                Token exists: ${!!token}<br>
+                User exists: ${!!user}<br>
+                Token: ${token}<br>
+                User: ${user}
+            `;
+        }
+
+        function clearAuth() {
+            localStorage.removeItem('token');
+            localStorage.removeItem('user');
+            document.getElementById('output').innerHTML = 'Auth cleared!';
+        }
+    </script>
+</body>
+</html>
